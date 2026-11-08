@@ -197,17 +197,33 @@ export function CommentHelper({
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-tag text-muted-foreground uppercase tracking-wider">
                   {tpl.category}
                 </span>
-                <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 opacity-80 sm:opacity-60 group-hover:opacity-100 transition-opacity">
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingTemplate(tpl);
                       setIsTemplateModalOpen(true);
                     }}
-                    className="p-1 text-xs text-muted-foreground hover:text-foreground rounded"
+                    className="p-1 px-1.5 text-xs text-muted-foreground hover:text-foreground rounded hover:bg-hover transition-colors"
                     title="Edit Template"
+                    aria-label="Edit Template"
                   >
                     ✏️
+                  </button>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm(`Delete template "${tpl.title}"?`)) {
+                        onDeleteTemplate(tpl.id);
+                      }
+                    }}
+                    className="p-1 px-1.5 text-xs text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors"
+                    title="Delete Template"
+                    aria-label="Delete Template"
+                  >
+                    🗑️
                   </button>
                 </div>
               </div>

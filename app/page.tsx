@@ -179,7 +179,10 @@ export default function DashboardPage() {
               onToggleFirstName={setUseFirstNameOnly}
               onAddTemplate={addTemplate}
               onUpdateTemplate={updateTemplate}
-              onDeleteTemplate={deleteTemplate}
+              onDeleteTemplate={(id) => {
+                deleteTemplate(id);
+                showToast("✓ Template deleted");
+              }}
               onCopyText={handleCopyText}
             />
           )}
