@@ -243,7 +243,7 @@
               sidebarCollapsed: parsed.settings?.sidebarCollapsed || false,
               selectedScout: parsed.settings?.selectedScout || "Aaron Garcia"
             },
-            scratchpad: typeof parsed.scratchpad === "string" ? parsed.scratchpad : "Shift notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
+            scratchpad: typeof parsed.scratchpad === "string" ? parsed.scratchpad : "Handover notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
             history: Array.isArray(parsed.history) ? parsed.history : []
           };
           localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -270,7 +270,7 @@
           sidebarCollapsed: false,
           selectedScout: "Aaron Garcia"
         },
-        scratchpad: "Shift notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
+        scratchpad: "Handover notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
         history: []
       };
 

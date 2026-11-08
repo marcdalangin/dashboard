@@ -22,29 +22,29 @@
 
     <div class="nav-section">
       <div class="nav-label">Views</div>
-      <div class="nav-item active" data-tab="kanban-tab">
+      <div class="nav-item active" data-tab="kanban-tab" title="Kanban Board">
         <span class="icon">📊</span>
         <span>Kanban Board</span>
         <span class="badge" id="kanban-count-badge">8</span>
       </div>
-      <div class="nav-item" data-tab="comment-tab">
+      <div class="nav-item" data-tab="comment-tab" title="Comment Helper">
         <span class="icon">💬</span>
         <span>Comment Helper</span>
       </div>
-      <div class="nav-item" data-tab="scratchpad-tab">
+      <div class="nav-item" data-tab="scratchpad-tab" title="Handover Notes">
         <span class="icon">📝</span>
-        <span>Quick Scratchpad</span>
+        <span>Handover Notes</span>
       </div>
 
       <div class="nav-label">Database</div>
-      <div class="nav-item" data-tab="scout-tab">
+      <div class="nav-item" data-tab="scout-tab" title="Scouts Directory">
         <span class="icon">👥</span>
         <span>Scouts Directory</span>
         <span class="badge" id="scout-count-badge" style="background: var(--tag-green-bg); color: var(--tag-green-text);">30.5k</span>
       </div>
 
       <div class="nav-label">Workspace</div>
-      <div class="nav-item" id="settings-nav-btn">
+      <div class="nav-item" id="settings-nav-btn" title="Settings & Backup">
         <span class="icon">⚙️</span>
         <span>Settings & Backup</span>
       </div>
@@ -70,16 +70,16 @@
     <header class="page-header">
       <!-- Modular Tabbed Views Switcher -->
       <nav class="notion-tabs">
-        <div class="notion-tab active" data-tab="kanban-tab">
+        <div class="notion-tab active" data-tab="kanban-tab" title="Kanban Board">
           <span>📊</span> Kanban Board
         </div>
-        <div class="notion-tab" data-tab="comment-tab">
+        <div class="notion-tab" data-tab="comment-tab" title="Comment Helper">
           <span>💬</span> Comment Helper
         </div>
-        <div class="notion-tab" data-tab="scratchpad-tab">
-          <span>📝</span> Scratchpad
+        <div class="notion-tab" data-tab="scratchpad-tab" title="Handover Notes">
+          <span>📝</span> Handover Notes
         </div>
-        <div class="notion-tab" data-tab="scout-tab">
+        <div class="notion-tab" data-tab="scout-tab" title="Scouts Database">
           <span>👥</span> Scouts (<span id="scout-tab-badge">30,477</span>)
         </div>
       </nav>
@@ -237,18 +237,18 @@
     </section>
 
     <!-- ======================================================================
-         TAB 3: SCRATCHPAD & NOTES
+         TAB 3: HANDOVER NOTES
          ====================================================================== -->
     <section class="view-container" id="scratchpad-tab">
       <div class="scratchpad-container">
         <div class="notion-callout" style="margin-bottom: 0;">
           <div class="icon">📝</div>
           <div class="notion-callout-text">
-            <strong>Shift Scratchpad:</strong> Auto-saving notepad for temporary match numbers, operator notes, shift handovers, and quick reminders.
+            <strong>Handover Notes:</strong> Auto-saving notepad for match numbers, shift handovers, operational logs, and quick reminders.
           </div>
         </div>
 
-        <textarea class="scratchpad-textarea" id="scratchpad-input" placeholder="Type quick notes, match IDs, or handover items here... (Automatically saved locally)"></textarea>
+        <textarea class="scratchpad-textarea" id="scratchpad-input" placeholder="Type shift handover notes, match IDs, or operational logs here... (Automatically saved locally)"></textarea>
 
         <div class="scratchpad-footer">
           <span id="scratchpad-stats">0 characters • 0 words</span>
