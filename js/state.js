@@ -2,7 +2,8 @@
 // Central State Management & Persistence (Local Storage)
 // ==========================================================================
 
-const STORAGE_KEY = "notion_dashboard_state_v1";
+const STORAGE_KEY = "notion_dashboard_state_v2";
+const LEGACY_STORAGE_KEY = "notion_dashboard_state_v1";
 
 const DEFAULT_COLUMNS = [
   { id: "backlogs", title: "Backlogs", dotClass: "dot-backlog" },
@@ -206,13 +207,18 @@ class StateManager {
 
   loadState() {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
+      let saved = localStorage.getItem(STORAGE_KEY);
+      if (!saved) {
+        // Check for legacy v1 state to preserve any existing user tasks/notes
+        saved = localStorage.getItem(LEGACY_STORAGE_KEY);
+      }
+
       if (saved) {
         const parsed = JSON.parse(saved);
-        return {
-          tasks: parsed.tasks || DEFAULT_TASKS,
+        const loadedState = {
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : DEFAULT_TASKS,
           columns: DEFAULT_COLUMNS,
-          templates: parsed.templates || DEFAULT_TEMPLATES,
+          templates: Array.isArray(parsed.templates) ? parsed.templates : DEFAULT_TEMPLATES,
           settings: {
             theme: parsed.settings?.theme || "light",
             useFirstNameOnly: parsed.settings?.useFirstNameOnly !== undefined ? parsed.settings.useFirstNameOnly : true,
@@ -220,15 +226,24 @@ class StateManager {
             sidebarCollapsed: parsed.settings?.sidebarCollapsed || false,
             selectedScout: parsed.settings?.selectedScout || "Aaron Garcia"
           },
-          scratchpad: parsed.scratchpad !== undefined ? parsed.scratchpad : "Shift notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
-          history: parsed.history || []
+          scratchpad: typeof parsed.scratchpad === "string" ? parsed.scratchpad : "Shift notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
+          history: Array.isArray(parsed.history) ? parsed.history : []
         };
+        // Always persist to active v2 key
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          tasks: loadedState.tasks,
+          templates: loadedState.templates,
+          settings: loadedState.settings,
+          scratchpad: loadedState.scratchpad,
+          history: loadedState.history.slice(0, 30)
+        }));
+        return loadedState;
       }
     } catch (e) {
       console.warn("Failed to parse saved state:", e);
     }
 
-    return {
+    const initialState = {
       tasks: DEFAULT_TASKS,
       columns: DEFAULT_COLUMNS,
       templates: DEFAULT_TEMPLATES,
@@ -242,6 +257,19 @@ class StateManager {
       scratchpad: "Shift notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
       history: []
     };
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initialState));
+    } catch (e) {
+      console.error("Failed to initialize storage:", e);
+    }
+
+    return initialState;
+  }
+
+  resetToDefaults() {
+    this.state.templates = JSON.parse(JSON.stringify(DEFAULT_TEMPLATES));
+    this.save();
   }
 
   save() {

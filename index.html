@@ -52,7 +52,7 @@
 
     <div class="sidebar-footer">
       <button class="theme-toggle-btn" id="theme-btn" title="Toggle Dark/Light Mode (Ctrl+D)">
-        <span id="theme-toggle-text">Dark Mode</span>
+        <span id="theme-toggle-text" class="theme-toggle-text">Dark Mode</span>
         <span id="theme-icon">🌙</span>
       </button>
       <div class="sidebar-footer-text" style="font-size: 11px; color: var(--text-faint); text-align: center;">
@@ -66,14 +66,8 @@
        ======================================================================== -->
   <main id="main-content">
     
-    <!-- Notion Page Header -->
+    <!-- Notion Page Header (Top Navigation Tabs) -->
     <header class="page-header">
-      <div class="page-title-row">
-        <span class="page-icon">🎯</span>
-        <h1 class="page-title">Personal Work Dashboard</h1>
-      </div>
-      <p class="page-desc">Daily workflow tracking, operations monitoring & rapid comment templates</p>
-
       <!-- Modular Tabbed Views Switcher -->
       <nav class="notion-tabs">
         <div class="notion-tab active" data-tab="kanban-tab">
@@ -402,6 +396,18 @@
             📁 Upload Custom Scout List (.txt)
             <input type="file" id="scout-file-input" accept=".txt" style="display: none;">
           </label>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border);">
+
+        <div>
+          <strong style="font-size: 13px; color: var(--text-main);">Reset Options</strong>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+            Need to restore original default templates? You can safely reset templates back to initial setup without affecting your scout list.
+          </p>
+          <button class="btn-notion btn-notion-danger" id="btn-reset-defaults" style="margin-top: 8px;">
+            ↺ Reset to Default Templates
+          </button>
         </div>
       </div>
     </div>

@@ -254,6 +254,18 @@ function setupBackupAndSettings() {
     });
   }
 
+  const resetDefaultsBtn = document.getElementById("btn-reset-defaults");
+  if (resetDefaultsBtn) {
+    resetDefaultsBtn.addEventListener("click", () => {
+      if (confirm("Reset all templates back to default initial templates?")) {
+        appState.resetToDefaults();
+        showToast("Templates reset to defaults");
+        closeModal();
+        location.reload();
+      }
+    });
+  }
+
   if (importFileInput) {
     importFileInput.addEventListener("change", (e) => {
       const file = e.target.files[0];
