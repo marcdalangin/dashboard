@@ -11,6 +11,7 @@ interface SettingsModalProps {
   onExportJSON: () => void;
   onImportJSON: (jsonString: string) => boolean;
   onResetDefaults: () => void;
+  onClearAllTasks?: () => void;
 }
 
 export function SettingsModal({
@@ -22,6 +23,7 @@ export function SettingsModal({
   onExportJSON,
   onImportJSON,
   onResetDefaults,
+  onClearAllTasks,
 }: SettingsModalProps) {
   const [emailInput, setEmailInput] = useState(userEmail);
   const [statusMsg, setStatusMsg] = useState("");
@@ -145,6 +147,25 @@ export function SettingsModal({
             className="text-xs px-3 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium"
           >
             ↺ Reset Default Templates
+          </button>
+        </div>
+
+        {/* Clear All Kanban Tasks */}
+        <div className="space-y-2 pt-2 border-t border-line">
+          <span className="text-xs font-semibold text-foreground block">Kanban Tasks Management</span>
+          <p className="text-[11px] text-muted-foreground">
+            Clear all tasks across all columns to start a fresh shift or reset the board.
+          </p>
+          <button
+            onClick={() => {
+              if (confirm("Are you sure you want to clear ALL tasks from the Kanban board?")) {
+                onClearAllTasks?.();
+                alert("All Kanban tasks cleared.");
+              }
+            }}
+            className="text-xs px-3 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium"
+          >
+            🗑️ Clear All Kanban Tasks
           </button>
         </div>
       </div>

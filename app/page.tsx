@@ -22,6 +22,8 @@ export default function DashboardPage() {
     updateTask,
     moveTask,
     deleteTask,
+    clearColumnTasks,
+    clearAllTasks,
     addTemplate,
     updateTemplate,
     deleteTemplate,
@@ -55,13 +57,17 @@ export default function DashboardPage() {
     });
   }, []);
 
-  // Sync dark mode class on <html>
+  // Sync dark mode class and colorScheme on <html>
   useEffect(() => {
     if (!isInitialized) return;
     if (state.settings.theme === "dark") {
       document.documentElement.classList.add("dark");
+      document.documentElement.classList.remove("light");
+      document.documentElement.style.colorScheme = "dark";
     } else {
       document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+      document.documentElement.style.colorScheme = "light";
     }
   }, [state.settings.theme, isInitialized]);
 
@@ -156,6 +162,8 @@ export default function DashboardPage() {
               onUpdateTask={updateTask}
               onMoveTask={moveTask}
               onDeleteTask={deleteTask}
+              onClearColumn={clearColumnTasks}
+              onClearDone={() => clearColumnTasks("done")}
               isDrawerOpen={isTaskDrawerOpen}
               onOpenDrawer={() => setIsTaskDrawerOpen(true)}
               onCloseDrawer={() => setIsTaskDrawerOpen(false)}
@@ -201,6 +209,7 @@ export default function DashboardPage() {
         onExportJSON={exportJSON}
         onImportJSON={importJSON}
         onResetDefaults={resetTemplates}
+        onClearAllTasks={clearAllTasks}
       />
 
       {/* Floating Toast Notification */}

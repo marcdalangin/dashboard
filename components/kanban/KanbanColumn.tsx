@@ -13,6 +13,7 @@ interface KanbanColumnProps {
   onAddTask: (columnId: ColumnId) => void;
   onMoveTask: (taskId: string, targetCol: ColumnId) => void;
   onDeleteTask: (taskId: string) => void;
+  onClearColumn?: (columnId: ColumnId) => void;
 }
 
 export function KanbanColumn({
@@ -24,6 +25,7 @@ export function KanbanColumn({
   onAddTask,
   onMoveTask,
   onDeleteTask,
+  onClearColumn,
 }: KanbanColumnProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -63,9 +65,25 @@ export function KanbanColumn({
             {title}
           </span>
         </div>
-        <span className="text-xs font-mono text-muted-foreground tabular-nums">
-          {tasks.length}
-        </span>
+        <div className="flex items-center gap-2">
+          {tasks.length > 0 && onClearColumn && (
+            <button
+              type="button"
+              onClick={() => {
+                if (confirm(`Clear all ${tasks.length} task(s) from "${title}"?`)) {
+                  onClearColumn(id);
+                }
+              }}
+              className="text-[10px] font-mono text-muted-foreground hover:text-rose-500 px-1.5 py-0.5 rounded hover:bg-rose-500/10 transition-colors"
+              title={`Clear all ${title} tasks`}
+            >
+              Clear
+            </button>
+          )}
+          <span className="text-xs font-mono text-muted-foreground tabular-nums">
+            {tasks.length}
+          </span>
+        </div>
       </div>
 
       {/* Cards List */}

@@ -239,6 +239,23 @@ export function useDashboardStore() {
     [updateState]
   );
 
+  const clearColumnTasks = useCallback(
+    (columnId: ColumnId) => {
+      updateState((prev) => ({
+        ...prev,
+        tasks: prev.tasks.filter((t) => t.columnId !== columnId),
+      }));
+    },
+    [updateState]
+  );
+
+  const clearAllTasks = useCallback(() => {
+    updateState((prev) => ({
+      ...prev,
+      tasks: [],
+    }));
+  }, [updateState]);
+
   // --- Template Methods ---
   const addTemplate = useCallback(
     (templateData: { title: string; category?: Template["category"]; body: string; pinned?: boolean }) => {
@@ -422,6 +439,8 @@ export function useDashboardStore() {
     updateTask,
     moveTask,
     deleteTask,
+    clearColumnTasks,
+    clearAllTasks,
     addTemplate,
     updateTemplate,
     deleteTemplate,

@@ -21,6 +21,8 @@ interface KanbanBoardProps {
   onUpdateTask: (id: string, updates: Partial<Task>) => void;
   onMoveTask: (id: string, targetCol: ColumnId) => void;
   onDeleteTask: (id: string) => void;
+  onClearColumn?: (colId: ColumnId) => void;
+  onClearDone?: () => void;
   isDrawerOpen: boolean;
   onOpenDrawer: () => void;
   onCloseDrawer: () => void;
@@ -33,6 +35,8 @@ export function KanbanBoard({
   onUpdateTask,
   onMoveTask,
   onDeleteTask,
+  onClearColumn,
+  onClearDone,
   isDrawerOpen,
   onOpenDrawer,
   onCloseDrawer,
@@ -124,8 +128,25 @@ export function KanbanBoard({
           })}
         </div>
 
-        {/* Priority Filter */}
+        {/* Priority Filter & Batch Actions */}
         <div className="flex items-center gap-2 self-end sm:self-auto">
+          {filteredTasks.some((t) => t.columnId === "done") && onClearDone && (
+            <button
+              type="button"
+              onClick={() => {
+                const count = filteredTasks.filter((t) => t.columnId === "done").length;
+                if (confirm(`Clear all ${count} completed task(s) from Done?`)) {
+                  onClearDone();
+                }
+              }}
+              className="text-xs px-2.5 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium transition-colors flex items-center gap-1"
+              title="Clear all tasks in the Done column"
+            >
+              <span>🗑️</span>
+              <span>Clear Done ({filteredTasks.filter((t) => t.columnId === "done").length})</span>
+            </button>
+          )}
+
           <label className="text-xs text-muted-foreground hidden sm:inline">Priority:</label>
           <select
             value={priorityFilter}
@@ -153,6 +174,7 @@ export function KanbanBoard({
             onAddTask={handleAddNewTaskInCol}
             onMoveTask={onMoveTask}
             onDeleteTask={onDeleteTask}
+            onClearColumn={onClearColumn}
           />
         ))}
       </div>
@@ -170,6 +192,7 @@ export function KanbanBoard({
             onAddTask={handleAddNewTaskInCol}
             onMoveTask={onMoveTask}
             onDeleteTask={onDeleteTask}
+            onClearColumn={onClearColumn}
           />
         ))}
       </div>

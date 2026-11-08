@@ -77,11 +77,16 @@ export function KanbanCard({ task, onClick, onMoveColumn, onDelete }: KanbanCard
             </button>
           )}
           <button
-            onClick={onDelete}
-            className="p-1 text-xs text-muted-foreground hover:text-rose-500 rounded hover:bg-hover ml-1"
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
+            className="p-1 px-1.5 text-xs text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 rounded hover:bg-rose-500/10 ml-0.5 transition-colors font-mono"
             title="Delete task"
+            aria-label="Delete task"
           >
-            ✕
+            🗑️
           </button>
         </div>
       </div>

@@ -2,22 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: light dark;
-
-  --background: light-dark(#ffffff, #0a0a0a);
-  --foreground: light-dark(#111827, #f3f4f6);
-  --sidebar: light-dark(#fbfbfa, #111111);
-  --card: light-dark(#ffffff, #141414);
-  --border: light-dark(#e5e7eb, #262626);
-  --muted: light-dark(#f3f4f6, #1c1c1c);
-  --muted-foreground: light-dark(#6b7280, #9ca3af);
-  --tag: light-dark(#f3f4f6, #1f1f1f);
-  --hover: light-dark(#f3f4f6, #1f1f1f);
-  --line: light-dark(#e5e7eb, #262626);
+:root,
+html:not(.dark) {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #111827;
+  --sidebar: #fbfbfa;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --tag: #f3f4f6;
+  --hover: #f3f4f6;
+  --line: #e5e7eb;
 }
 
-.dark {
+html.dark {
   color-scheme: dark;
   --background: #0a0a0a;
   --foreground: #f3f4f6;

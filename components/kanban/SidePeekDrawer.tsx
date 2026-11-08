@@ -100,6 +100,14 @@ export function SidePeekDrawer({
     setChecklist((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const handleDelete = () => {
+    if (!task || !onDelete) return;
+    if (confirm(`Are you sure you want to delete "${task.title}"?`)) {
+      onDelete(task.id);
+      onClose();
+    }
+  };
+
   const handleSave = () => {
     if (!title.trim()) return;
     const parsedTags = tagsInput
@@ -143,11 +151,8 @@ export function SidePeekDrawer({
             {task && onDelete && (
               <button
                 type="button"
-                onClick={() => {
-                  onDelete(task.id);
-                  onClose();
-                }}
-                className="text-xs px-2.5 py-1.5 rounded text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                onClick={handleDelete}
+                className="text-xs px-2.5 py-1.5 rounded text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors font-medium"
                 title="Delete Task"
               >
                 🗑️ Delete
@@ -323,6 +328,38 @@ export function SidePeekDrawer({
               placeholder="Add detailed match logs, incident notes, referee reports, or instructions here..."
               className="w-full text-xs p-3 rounded-lg border border-line bg-transparent text-foreground focus:outline-none focus:border-neutral-500 font-mono leading-relaxed"
             />
+          </div>
+        </div>
+
+        {/* Sticky Footer */}
+        <div className="p-4 border-t border-line bg-sidebar flex items-center justify-between flex-shrink-0">
+          {task && onDelete ? (
+            <button
+              type="button"
+              onClick={handleDelete}
+              className="text-xs px-3 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium transition-colors"
+            >
+              🗑️ Delete Task
+            </button>
+          ) : (
+            <div />
+          )}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-xs px-3 py-1.5 rounded border border-line hover:bg-hover text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="text-xs px-3.5 py-1.5 rounded bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium hover:opacity-90 transition-opacity"
+            >
+              Save Changes
+            </button>
           </div>
         </div>
       </aside>
