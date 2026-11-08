@@ -806,6 +806,11 @@ input:checked + .slider:before {
   background: var(--bg-subtle);
   color: var(--text-main);
 }
+.btn-quick.btn-delete-card:hover {
+  background: var(--tag-red-bg);
+  border-color: var(--tag-red-text);
+  color: var(--tag-red-text);
+}
 
 .add-card-btn {
   margin: 8px 10px;

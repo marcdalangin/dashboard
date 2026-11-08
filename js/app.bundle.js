@@ -1238,6 +1238,7 @@
             ${colId !== "blocked" ? `<button class="btn-quick btn-move-blocked" data-id="${task.id}" title="Mark Blocked">⛔</button>` : ''}
             ${colId !== "done" ? `<button class="btn-quick btn-move-next" data-id="${task.id}" title="Move Next">→</button>` : ''}
             ${colId !== "done" ? `<button class="btn-quick btn-move-done" data-id="${task.id}" title="Mark Done">✓</button>` : ''}
+            <button class="btn-quick btn-delete-card" data-id="${task.id}" title="Delete Task">🗑️</button>
           </div>
         </div>
       </div>
@@ -1296,6 +1297,20 @@
         const id = btn.getAttribute("data-id");
         appState.moveTask(id, "done");
         showToast("Task marked as Done ✓");
+      });
+    });
+
+    container.querySelectorAll(".btn-delete-card").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute("data-id");
+        const task = appState.state.tasks.find(t => t.id === id);
+        const title = task ? ` "${task.title}"` : "";
+        if (confirm(`Delete task${title}? This cannot be undone.`)) {
+          appState.deleteTask(id);
+          showToast("Task deleted 🗑️");
+          renderKanbanBoard();
+        }
       });
     });
   }
@@ -1465,11 +1480,15 @@
 
     if (deleteBtn) {
       deleteBtn.addEventListener("click", () => {
-        if (activeTaskDetailId && confirm("Delete this task?")) {
-          appState.deleteTask(activeTaskDetailId);
-          showToast("Task deleted");
-          closeDrawer();
-          renderKanbanBoard();
+        if (activeTaskDetailId) {
+          const task = appState.state.tasks.find(t => t.id === activeTaskDetailId);
+          const title = task ? ` "${task.title}"` : "";
+          if (confirm(`Delete task${title}? This cannot be undone.`)) {
+            appState.deleteTask(activeTaskDetailId);
+            showToast("Task deleted 🗑️");
+            closeDrawer();
+            renderKanbanBoard();
+          }
         }
       });
     }
