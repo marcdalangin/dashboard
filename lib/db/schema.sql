@@ -1,0 +1,35 @@
+-- Neon PostgreSQL Schema for Remote Dashboard Sync
+
+CREATE TABLE IF NOT EXISTS users (
+  email VARCHAR(255) PRIMARY KEY,
+  settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  scratchpad TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+  id VARCHAR(64) PRIMARY KEY,
+  user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  column_id VARCHAR(32) NOT NULL,
+  priority VARCHAR(16) NOT NULL DEFAULT 'Medium',
+  scout TEXT NOT NULL DEFAULT '',
+  tags JSONB NOT NULL DEFAULT '[]'::jsonb,
+  checklist JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at BIGINT NOT NULL,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS templates (
+  id VARCHAR(64) PRIMARY KEY,
+  user_email VARCHAR(255) NOT NULL REFERENCES users(email) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  category VARCHAR(32) NOT NULL,
+  body TEXT NOT NULL,
+  pinned BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_user ON tasks(user_email);
+CREATE INDEX IF NOT EXISTS idx_templates_user ON templates(user_email);

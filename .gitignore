@@ -2,6 +2,18 @@
 *.log
 npm-debug.log*
 
+# Next.js & Build Output
+.next/
+out/
+build/
+node_modules/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.development
+
 # OS Files
 .DS_Store
 Thumbs.db
