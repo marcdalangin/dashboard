@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Personal Work Dashboard</title>
+  <link rel="stylesheet" href="styles/notion-theme.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       SIDEBAR
+       ======================================================================== -->
+  <aside id="sidebar">
+    <div class="workspace-header">
+      <div class="workspace-info">
+        <div class="workspace-avatar">W</div>
+        <div class="workspace-title">Personal Workspace</div>
+      </div>
+      <button class="collapse-btn" id="collapse-sidebar-btn" title="Toggle Sidebar (Ctrl+\)">‹</button>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Views</div>
+      <div class="nav-item active" data-tab="kanban-tab">
+        <span class="icon">📊</span>
+        <span>Kanban Board</span>
+        <span class="badge" id="kanban-count-badge">8</span>
+      </div>
+      <div class="nav-item" data-tab="comment-tab">
+        <span class="icon">💬</span>
+        <span>Comment Helper</span>
+      </div>
+      <div class="nav-item" data-tab="scratchpad-tab">
+        <span class="icon">📝</span>
+        <span>Quick Scratchpad</span>
+      </div>
+
+      <div class="nav-label">Database</div>
+      <div class="nav-item" data-tab="scout-tab">
+        <span class="icon">👥</span>
+        <span>Scouts Directory</span>
+        <span class="badge" id="scout-count-badge" style="background: var(--tag-green-bg); color: var(--tag-green-text);">30.5k</span>
+      </div>
+
+      <div class="nav-label">Workspace</div>
+      <div class="nav-item" id="settings-nav-btn">
+        <span class="icon">⚙️</span>
+        <span>Settings & Backup</span>
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      <button class="theme-toggle-btn" id="theme-btn" title="Toggle Dark/Light Mode (Ctrl+D)">
+        <span id="theme-toggle-text">Dark Mode</span>
+        <span id="theme-icon">🌙</span>
+      </button>
+      <div class="sidebar-footer-text" style="font-size: 11px; color: var(--text-faint); text-align: center;">
+        Personal Dashboard • v1.0
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       MAIN PAGE CONTENT
+       ======================================================================== -->
+  <main id="main-content">
+    
+    <!-- Notion Page Header -->
+    <header class="page-header">
+      <div class="page-title-row">
+        <span class="page-icon">🎯</span>
+        <h1 class="page-title">Personal Work Dashboard</h1>
+      </div>
+      <p class="page-desc">Daily workflow tracking, operations monitoring & rapid comment templates</p>
+
+      <!-- Modular Tabbed Views Switcher -->
+      <nav class="notion-tabs">
+        <div class="notion-tab active" data-tab="kanban-tab">
+          <span>📊</span> Kanban Board
+        </div>
+        <div class="notion-tab" data-tab="comment-tab">
+          <span>💬</span> Comment Helper
+        </div>
+        <div class="notion-tab" data-tab="scratchpad-tab">
+          <span>📝</span> Scratchpad
+        </div>
+        <div class="notion-tab" data-tab="scout-tab">
+          <span>👥</span> Scouts (<span id="scout-tab-badge">30,477</span>)
+        </div>
+      </nav>
+    </header>
+
+    <!-- ======================================================================
+         TAB 1: KANBAN BOARD
+         ====================================================================== -->
+    <section class="view-container active" id="kanban-tab">
+      <div class="notion-callout">
+        <div class="icon">💡</div>
+        <div class="notion-callout-text">
+          <strong>Notion Kanban View:</strong> Categorize your shift tasks across 5 stages: <strong>Backlogs</strong>, <strong>To-do</strong>, <strong>In Progress</strong>, <strong>Blocked</strong>, and <strong>Done</strong>. Drag & drop cards or click to open full details.
+        </div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="kanban-toolbar">
+        <div class="search-input-wrapper">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="kanban-search" placeholder="Filter tasks by title, tag, or scout (Ctrl+K)...">
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <select class="modal-select" id="kanban-priority-filter" style="padding: 6px 10px; font-size: 13px;">
+            <option value="all">All Priorities</option>
+            <option value="High">High Priority</option>
+            <option value="Medium">Medium Priority</option>
+            <option value="Low">Low Priority</option>
+          </select>
+
+          <button class="btn-notion btn-notion-primary" id="btn-add-task-top">+ New Task</button>
+        </div>
+      </div>
+
+      <!-- 5-Column Board Grid -->
+      <div class="kanban-board">
+        <!-- 1. Backlogs -->
+        <div class="kanban-column" data-col="backlogs">
+          <div class="column-header">
+            <div class="column-title-group">
+              <span class="col-dot dot-backlog"></span>
+              <span class="column-title">Backlogs</span>
+            </div>
+            <span class="column-badge">0</span>
+          </div>
+          <div class="cards-container"></div>
+          <button class="add-card-btn">+ New</button>
+        </div>
+
+        <!-- 2. To-do -->
+        <div class="kanban-column" data-col="todo">
+          <div class="column-header">
+            <div class="column-title-group">
+              <span class="col-dot dot-todo"></span>
+              <span class="column-title">To-do</span>
+            </div>
+            <span class="column-badge">0</span>
+          </div>
+          <div class="cards-container"></div>
+          <button class="add-card-btn">+ New</button>
+        </div>
+
+        <!-- 3. In Progress -->
+        <div class="kanban-column" data-col="in-progress">
+          <div class="column-header">
+            <div class="column-title-group">
+              <span class="col-dot dot-progress"></span>
+              <span class="column-title">In Progress</span>
+            </div>
+            <span class="column-badge">0</span>
+          </div>
+          <div class="cards-container"></div>
+          <button class="add-card-btn">+ New</button>
+        </div>
+
+        <!-- 4. Blocked -->
+        <div class="kanban-column" data-col="blocked">
+          <div class="column-header">
+            <div class="column-title-group">
+              <span class="col-dot dot-blocked"></span>
+              <span class="column-title">Blocked</span>
+            </div>
+            <span class="column-badge">0</span>
+          </div>
+          <div class="cards-container"></div>
+          <button class="add-card-btn">+ New</button>
+        </div>
+
+        <!-- 5. Done -->
+        <div class="kanban-column" data-col="done">
+          <div class="column-header">
+            <div class="column-title-group">
+              <span class="col-dot dot-done"></span>
+              <span class="column-title">Done</span>
+            </div>
+            <span class="column-badge">0</span>
+          </div>
+          <div class="cards-container"></div>
+          <button class="add-card-btn">+ New</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         TAB 2: COMMENT HELPER
+         ====================================================================== -->
+    <section class="view-container" id="comment-tab">
+      <div class="notion-callout">
+        <div class="icon">💬</div>
+        <div class="notion-callout-text">
+          <strong>Comment Helper:</strong> Rapid pre-made and custom templates for your monitoring communication. Templates referencing <code>'Scout'</code> will seamlessly use the active scout or prompt with live autocomplete lookup.
+        </div>
+      </div>
+
+      <!-- Control Panel -->
+      <div class="helper-control-panel">
+        <div class="helper-top-row">
+          <!-- Scout Autocomplete Lookup -->
+          <div class="scout-lookup-group">
+            <div class="scout-label">
+              <span>Active Scout Reference</span>
+              <span id="selected-scout-display">None selected</span>
+            </div>
+            <div style="position: relative;">
+              <input type="text" class="search-input" id="scout-quick-search" placeholder="Type scout name (e.g. Aaron Garcia, Morales, Beck)..." autocomplete="off">
+              <div class="autocomplete-list" id="scout-dropdown"></div>
+            </div>
+          </div>
+
+          <!-- PROMINENT FIRST NAME ONLY TOGGLE -->
+          <label class="toggle-container" title="When active, automatically extracts only the first name (e.g. 'Aaron' from 'Aaron Garcia', 'Ignacio' from 'Morales, Ignacio')">
+            <div class="toggle-switch">
+              <input type="checkbox" id="first-name-toggle" checked>
+              <span class="slider"></span>
+            </div>
+            <span class="toggle-text">Use First Name Only</span>
+          </label>
+
+          <div style="display: flex; gap: 8px;">
+            <div class="search-input-wrapper" style="max-width: 220px;">
+              <span class="search-icon">🔍</span>
+              <input type="text" class="search-input" id="template-filter-input" placeholder="Search templates...">
+            </div>
+            <button class="btn-notion btn-notion-primary" id="btn-new-template">+ New Template</button>
+          </div>
+        </div>
+
+        <!-- Category Filter Pills -->
+        <div class="category-pills" id="category-pills-container"></div>
+      </div>
+
+      <!-- Templates Grid -->
+      <div class="templates-grid" id="templates-container"></div>
+    </section>
+
+    <!-- ======================================================================
+         TAB 3: SCRATCHPAD & NOTES
+         ====================================================================== -->
+    <section class="view-container" id="scratchpad-tab">
+      <div class="scratchpad-container">
+        <div class="notion-callout" style="margin-bottom: 0;">
+          <div class="icon">📝</div>
+          <div class="notion-callout-text">
+            <strong>Shift Scratchpad:</strong> Auto-saving notepad for temporary match numbers, operator notes, shift handovers, and quick reminders.
+          </div>
+        </div>
+
+        <textarea class="scratchpad-textarea" id="scratchpad-input" placeholder="Type quick notes, match IDs, or handover items here... (Automatically saved locally)"></textarea>
+
+        <div class="scratchpad-footer">
+          <span id="scratchpad-stats">0 characters • 0 words</span>
+          <span id="scratchpad-saved-time">All changes saved locally</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================================================================
+         TAB 4: SCOUTS DIRECTORY
+         ====================================================================== -->
+    <section class="view-container" id="scout-tab">
+      <div class="notion-callout">
+        <div class="icon">👥</div>
+        <div class="notion-callout-text">
+          <strong>Scouts Reference Database:</strong> Connected directly to <code>Scout list.txt</code> with 30,477 indexed scouts. Search any name to view smart first-name parsing or copy to clipboard with 1 click.
+        </div>
+      </div>
+
+      <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px;">
+        <div class="search-input-wrapper" style="max-width: 420px; margin-bottom: 16px;">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="scout-dir-search" placeholder="Search 30,477 scouts by full name or keyword...">
+        </div>
+
+        <div id="scouts-dir-list" style="display: flex; flex-direction: column; gap: 8px; max-height: calc(100vh - 360px); overflow-y: auto;"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       MODAL: VARIABLE REPLACEMENT / LIVE PREVIEW
+       ======================================================================== -->
+  <div class="modal-overlay" id="variable-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="modal-tpl-title">Use Template</h3>
+        <button class="close-btn" id="variable-modal-close">✕</button>
+      </div>
+
+      <div class="modal-field">
+        <label>Scout Name (Type to search or select):</label>
+        <div style="position: relative;">
+          <input type="text" class="modal-input" id="modal-scout-input" placeholder="Search scout (e.g. Aaron Garcia)..." autocomplete="off">
+          <div class="autocomplete-list" id="modal-scout-dropdown"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 0;">
+        <label class="toggle-container" style="padding: 4px 10px;">
+          <div class="toggle-switch">
+            <input type="checkbox" id="modal-first-name-toggle" checked>
+            <span class="slider"></span>
+          </div>
+          <span class="toggle-text" style="font-size: 11px;">Use First Name Only</span>
+        </label>
+        <span id="name-format-hint" style="font-size: 11px; color: var(--text-faint);">Format: First name</span>
+      </div>
+
+      <div class="modal-field">
+        <label>Live Preview:</label>
+        <div class="modal-preview-box" id="modal-preview-content"></div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-notion" id="variable-modal-cancel">Cancel</button>
+        <button class="btn-notion btn-notion-primary" id="btn-copy-modal">Copy Final Text (Enter)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: CREATE / EDIT TEMPLATE
+       ======================================================================== -->
+  <div class="modal-overlay" id="template-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title" id="tpl-modal-header">Template</h3>
+        <button class="close-btn" id="tpl-modal-close">✕</button>
+      </div>
+
+      <input type="hidden" id="tpl-edit-id">
+
+      <div class="modal-field">
+        <label>Template Title:</label>
+        <input type="text" class="modal-input" id="tpl-edit-title" placeholder="e.g. Match Coverage Confirmation">
+      </div>
+
+      <div class="modal-field">
+        <label>Category:</label>
+        <select class="modal-select" id="tpl-edit-category">
+          <option value="scout-direct">Direct Scout Messages</option>
+          <option value="allocation">Match Allocation</option>
+          <option value="status">Status & Reviews</option>
+          <option value="general">General</option>
+        </select>
+      </div>
+
+      <div class="modal-field">
+        <label>Template Text (use <code>'Scout'</code> as variable):</label>
+        <textarea class="modal-textarea" id="tpl-edit-body" rows="6" placeholder="Hi 'Scout',&#10;...&#10;Kind regards"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-notion" id="tpl-modal-cancel">Cancel</button>
+        <button class="btn-notion btn-notion-primary" id="tpl-modal-save">Save Template</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL: SETTINGS & BACKUP
+       ======================================================================== -->
+  <div class="modal-overlay" id="settings-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 class="modal-title">Settings & Backup</h3>
+        <button class="close-btn" id="settings-modal-close">✕</button>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 14px;">
+        <div>
+          <strong style="font-size: 13px; color: var(--text-main);">Backup & Restore Data</strong>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+            Export all your Kanban tasks, custom templates, and settings to a JSON backup file or restore from a previous backup.
+          </p>
+          <div style="display: flex; gap: 8px; margin-top: 8px;">
+            <button class="btn-notion" id="btn-export-data">📥 Export Backup (.json)</button>
+            <label class="btn-notion" style="cursor: pointer;">
+              📤 Import Backup
+              <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            </label>
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border);">
+
+        <div>
+          <strong style="font-size: 13px; color: var(--text-main);">Scout List Source</strong>
+          <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">
+            Currently loaded: <strong>30,477 scouts</strong> from local reference. You can optionally upload an updated <code>Scout list.txt</code> file anytime.
+          </p>
+          <label class="btn-notion" style="cursor: pointer; margin-top: 8px;">
+            📁 Upload Custom Scout List (.txt)
+            <input type="file" id="scout-file-input" accept=".txt" style="display: none;">
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       NOTION SIDE-PEEK DRAWER (TASK DETAILS)
+       ======================================================================== -->
+  <div id="drawer-overlay" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.3); z-index: 1040; display: none;"></div>
+
+  <aside class="side-peek-drawer" id="side-peek-drawer">
+    <div class="drawer-header">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 16px;">📋</span>
+        <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">TASK DETAILS</span>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn-notion btn-notion-danger" id="drawer-delete-task" title="Delete Task" style="font-size: 11px;">Delete</button>
+        <button class="btn-notion btn-notion-primary" id="drawer-save-btn" style="font-size: 11px;">Save Changes</button>
+        <button class="close-btn" id="drawer-close-btn" title="Close (Esc)">✕</button>
+      </div>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Title -->
+      <input type="text" class="drawer-title-input" id="drawer-task-title" placeholder="Untitled Task...">
+
+      <!-- Notion Properties Table -->
+      <div class="properties-table">
+        <div class="property-row">
+          <div class="property-label"><span>Status</span></div>
+          <div>
+            <select class="modal-select" id="drawer-status-select" style="width: 100%;">
+              <option value="backlogs">Backlogs</option>
+              <option value="todo">To-do</option>
+              <option value="in-progress">In Progress</option>
+              <option value="blocked">Blocked</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="property-row">
+          <div class="property-label"><span>Priority</span></div>
+          <div>
+            <select class="modal-select" id="drawer-priority-select" style="width: 100%;">
+              <option value="Low">Low</option>
+              <option value="Medium">Medium</option>
+              <option value="High">High</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="property-row">
+          <div class="property-label"><span>Scout</span></div>
+          <div style="position: relative;">
+            <input type="text" class="modal-input" id="drawer-scout-input" placeholder="Assign scout..." style="width: 100%;" autocomplete="off">
+            <div class="autocomplete-list" id="drawer-scout-dropdown"></div>
+          </div>
+        </div>
+
+        <div class="property-row">
+          <div class="property-label"><span>Tags</span></div>
+          <div>
+            <input type="text" class="modal-input" id="drawer-tags-input" placeholder="e.g. Monitoring, Allocation (comma separated)" style="width: 100%;">
+          </div>
+        </div>
+      </div>
+
+      <!-- Checklist / Subtasks -->
+      <div class="checklist-section">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span class="checklist-header">Subtasks / Checklist</span>
+          <button type="button" class="btn-notion" id="drawer-add-checklist-btn" style="padding: 2px 8px; font-size: 11px;">+ Add Item</button>
+        </div>
+        <div id="drawer-checklist-items" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      </div>
+
+      <!-- Notes / Markdown Area -->
+      <div class="modal-field" style="flex: 1;">
+        <label>Notes & Description:</label>
+        <textarea class="modal-textarea" id="drawer-notes-area" rows="8" placeholder="Add detailed instructions, match notes, links or logs here..."></textarea>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       FLOATING TOAST NOTIFICATION
+       ======================================================================== -->
+  <div id="toast">✓ Copied to clipboard!</div>
+
+  <!-- Scripts (Standalone Bundle - Works directly via file:/// or http://) -->
+  <script src="data/scoutData.js"></script>
+  <script src="js/app.bundle.js"></script>
+</body>
+</html>
