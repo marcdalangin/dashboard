@@ -24,7 +24,8 @@ export async function GET(req: NextRequest) {
   try {
     // 1. Fetch user profile
     const users = await sql`
-      SELECT settings, scratchpad FROM users WHERE email = ${email} LIMIT 1
+      SELECT settings, scratchpad, COALESCE(categories, '[]'::jsonb) as categories
+      FROM users WHERE email = ${email} LIMIT 1
     `;
 
     if (users.length === 0) {
@@ -50,6 +51,7 @@ export async function GET(req: NextRequest) {
       state: {
         tasks,
         templates,
+        categories: user.categories,
         settings: user.settings,
         scratchpad: user.scratchpad,
       },
@@ -82,14 +84,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ configured: false, message: "Database connection unavailable." });
     }
 
-    // Ensure tables exist
+    // Ensure tables exist and alter if needed
     await sql`
       CREATE TABLE IF NOT EXISTS users (
         email VARCHAR(255) PRIMARY KEY,
         settings JSONB NOT NULL DEFAULT '{}'::jsonb,
         scratchpad TEXT NOT NULL DEFAULT '',
+        categories JSONB NOT NULL DEFAULT '[]'::jsonb,
         updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `;
+
+    await sql`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS categories JSONB NOT NULL DEFAULT '[]'::jsonb;
     `;
 
     await sql`
@@ -113,7 +120,7 @@ export async function POST(req: NextRequest) {
         id VARCHAR(64) PRIMARY KEY,
         user_email VARCHAR(255) NOT NULL,
         title TEXT NOT NULL,
-        category VARCHAR(32) NOT NULL,
+        category VARCHAR(64) NOT NULL,
         body TEXT NOT NULL,
         pinned BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -122,11 +129,18 @@ export async function POST(req: NextRequest) {
 
     // 1. Upsert user
     await sql`
-      INSERT INTO users (email, settings, scratchpad, updated_at)
-      VALUES (${email}, ${JSON.stringify(state.settings || {})}, ${state.scratchpad || ""}, NOW())
+      INSERT INTO users (email, settings, scratchpad, categories, updated_at)
+      VALUES (
+        ${email},
+        ${JSON.stringify(state.settings || {})},
+        ${state.scratchpad || ""},
+        ${JSON.stringify(state.categories || [])},
+        NOW()
+      )
       ON CONFLICT (email) DO UPDATE SET
         settings = EXCLUDED.settings,
         scratchpad = EXCLUDED.scratchpad,
+        categories = EXCLUDED.categories,
         updated_at = NOW()
     `;
 

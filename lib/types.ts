@@ -2,6 +2,14 @@ export type Priority = "Low" | "Medium" | "High";
 
 export type ColumnId = "backlogs" | "todo" | "in-progress" | "blocked" | "done";
 
+export type CategoryColor = "blue" | "green" | "amber" | "rose" | "purple" | "neutral";
+
+export interface TemplateCategory {
+  id: string;
+  name: string;
+  color: CategoryColor;
+}
+
 export interface ChecklistItem {
   id: string;
   text: string;
@@ -23,7 +31,7 @@ export interface Task {
 export interface Template {
   id: string;
   title: string;
-  category: "all" | "scout-direct" | "allocation" | "status" | "custom";
+  category: string;
   body: string;
   pinned: boolean;
 }
@@ -48,6 +56,7 @@ export interface DashboardSettings {
 export interface DashboardState {
   tasks: Task[];
   templates: Template[];
+  categories: TemplateCategory[];
   settings: DashboardSettings;
   scratchpad: string;
   history: HistoryItem[];

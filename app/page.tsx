@@ -26,6 +26,10 @@ export default function DashboardPage() {
     deleteTask,
     clearColumnTasks,
     clearAllTasks,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    resetCategories,
     addTemplate,
     updateTemplate,
     deleteTemplate,
@@ -202,6 +206,7 @@ export default function DashboardPage() {
           {state.settings.activeTab === "comment-tab" && (
             <CommentHelper
               templates={state.templates}
+              categories={state.categories}
               selectedScout={state.settings.selectedScout}
               useFirstNameOnly={state.settings.useFirstNameOnly}
               onUpdateScout={setSelectedScout}
@@ -211,6 +216,23 @@ export default function DashboardPage() {
               onDeleteTemplate={(id) => {
                 deleteTemplate(id);
                 showToast("🗑️ Template deleted");
+              }}
+              onAddCategory={(name, color) => {
+                const cat = addCategory(name, color);
+                showToast(`🏷️ Category "${cat.name}" added`);
+                return cat;
+              }}
+              onUpdateCategory={(id, updates) => {
+                updateCategory(id, updates);
+                showToast("🏷️ Category updated");
+              }}
+              onDeleteCategory={(id) => {
+                deleteCategory(id);
+                showToast("🗑️ Category deleted");
+              }}
+              onResetCategories={() => {
+                resetCategories();
+                showToast("✓ Categories reset to defaults");
               }}
               onCopyText={handleCopyText}
               selectedTemplateId={selectedTemplate?.id}

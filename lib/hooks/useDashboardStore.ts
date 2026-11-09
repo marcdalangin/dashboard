@@ -1,8 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { DashboardState, Task, Template, ColumnId, Priority, DashboardSettings } from "../types";
-import { DEFAULT_TASKS, DEFAULT_TEMPLATES } from "../defaultData";
+import {
+  DashboardState,
+  Task,
+  Template,
+  TemplateCategory,
+  CategoryColor,
+  ColumnId,
+  Priority,
+  DashboardSettings,
+} from "../types";
+import { DEFAULT_TASKS, DEFAULT_TEMPLATES, DEFAULT_TEMPLATE_CATEGORIES } from "../defaultData";
 
 const STORAGE_KEY = "notion_dashboard_state_v3";
 const LEGACY_STORAGE_KEY = "notion_dashboard_state_v2";
@@ -20,6 +29,7 @@ const INITIAL_SETTINGS: DashboardSettings = {
 const INITIAL_STATE: DashboardState = {
   tasks: DEFAULT_TASKS,
   templates: DEFAULT_TEMPLATES,
+  categories: DEFAULT_TEMPLATE_CATEGORIES,
   settings: INITIAL_SETTINGS,
   scratchpad: "Handover notes:\n- Review coverage applications\n- Confirm court 2 device status\n",
   history: [],
@@ -51,6 +61,10 @@ export function useDashboardStore() {
         setState({
           tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
           templates: Array.isArray(parsed.templates) ? parsed.templates : [],
+          categories:
+            Array.isArray(parsed.categories) && parsed.categories.length > 0
+              ? parsed.categories
+              : DEFAULT_TEMPLATE_CATEGORIES,
           settings: { ...INITIAL_SETTINGS, ...(parsed.settings || {}) },
           scratchpad: typeof parsed.scratchpad === "string" ? parsed.scratchpad : INITIAL_STATE.scratchpad,
           history: Array.isArray(parsed.history) ? parsed.history : [],
@@ -65,6 +79,7 @@ export function useDashboardStore() {
           const migratedState: DashboardState = {
             tasks: migratedTasks,
             templates: migratedTemplates,
+            categories: DEFAULT_TEMPLATE_CATEGORIES,
             settings: { ...INITIAL_SETTINGS, ...(parsedV2.settings || {}) },
             scratchpad: typeof parsedV2.scratchpad === "string" ? parsedV2.scratchpad : INITIAL_STATE.scratchpad,
             history: Array.isArray(parsedV2.history) ? parsedV2.history : [],
@@ -105,6 +120,7 @@ export function useDashboardStore() {
             state: {
               tasks: newState.tasks,
               templates: newState.templates,
+              categories: newState.categories,
               settings: newState.settings,
               scratchpad: newState.scratchpad,
             },
@@ -144,6 +160,10 @@ export function useDashboardStore() {
               ...prev,
               tasks: Array.isArray(data.state.tasks) ? data.state.tasks : prev.tasks,
               templates: Array.isArray(data.state.templates) ? data.state.templates : prev.templates,
+              categories:
+                Array.isArray(data.state.categories) && data.state.categories.length > 0
+                  ? data.state.categories
+                  : prev.categories,
               scratchpad: data.state.scratchpad !== undefined ? data.state.scratchpad : prev.scratchpad,
               settings: { ...prev.settings, ...(data.state.settings || {}) },
             };
@@ -287,13 +307,77 @@ export function useDashboardStore() {
     }));
   }, [updateState]);
 
+  // --- Category Methods ---
+  const addCategory = useCallback(
+    (name: string, color: CategoryColor = "neutral"): TemplateCategory => {
+      const trimmed = name.trim();
+      const baseSlug = trimmed.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const slug = baseSlug || "cat-" + Date.now();
+
+      let finalId = slug;
+      let counter = 1;
+      while (state.categories.some((c) => c.id === finalId)) {
+        finalId = `${slug}-${counter++}`;
+      }
+
+      const newCategory: TemplateCategory = {
+        id: finalId,
+        name: trimmed,
+        color,
+      };
+
+      updateState((prev) => ({
+        ...prev,
+        categories: [...prev.categories, newCategory],
+      }));
+
+      return newCategory;
+    },
+    [state.categories, updateState]
+  );
+
+  const updateCategory = useCallback(
+    (id: string, updates: Partial<TemplateCategory>) => {
+      updateState((prev) => ({
+        ...prev,
+        categories: prev.categories.map((c) => (c.id === id ? { ...c, ...updates } : c)),
+      }));
+    },
+    [updateState]
+  );
+
+  const deleteCategory = useCallback(
+    (id: string) => {
+      updateState((prev) => {
+        const remaining = prev.categories.filter((c) => c.id !== id);
+        const fallbackId = remaining.find((c) => c.id === "custom")?.id || remaining[0]?.id || "custom";
+        const updatedTemplates = prev.templates.map((tpl) =>
+          tpl.category === id ? { ...tpl, category: fallbackId } : tpl
+        );
+        return {
+          ...prev,
+          categories: remaining,
+          templates: updatedTemplates,
+        };
+      });
+    },
+    [updateState]
+  );
+
+  const resetCategories = useCallback(() => {
+    updateState((prev) => ({
+      ...prev,
+      categories: DEFAULT_TEMPLATE_CATEGORIES,
+    }));
+  }, [updateState]);
+
   // --- Template Methods ---
   const addTemplate = useCallback(
-    (templateData: { title: string; category?: Template["category"]; body: string; pinned?: boolean }) => {
+    (templateData: { title: string; category?: string; body: string; pinned?: boolean }) => {
       const newTemplate: Template = {
         id: "tpl-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
         title: templateData.title.trim(),
-        category: templateData.category || "scout-direct",
+        category: templateData.category || "custom",
         body: templateData.body.trim(),
         pinned: templateData.pinned || false,
       };
@@ -445,10 +529,11 @@ export function useDashboardStore() {
   // --- Export & Import ---
   const exportJSON = useCallback(() => {
     const backup = {
-      version: "3.0.0",
+      version: "3.1.0",
       exportedAt: new Date().toISOString(),
       tasks: state.tasks,
       templates: state.templates,
+      categories: state.categories,
       settings: state.settings,
       scratchpad: state.scratchpad,
     };
@@ -469,6 +554,10 @@ export function useDashboardStore() {
           ...prev,
           tasks: Array.isArray(parsed.tasks) ? parsed.tasks : prev.tasks,
           templates: Array.isArray(parsed.templates) ? parsed.templates : prev.templates,
+          categories:
+            Array.isArray(parsed.categories) && parsed.categories.length > 0
+              ? parsed.categories
+              : prev.categories,
           settings: { ...prev.settings, ...(parsed.settings || {}) },
           scratchpad: parsed.scratchpad !== undefined ? parsed.scratchpad : prev.scratchpad,
         }));
@@ -492,6 +581,12 @@ export function useDashboardStore() {
     deleteTask,
     clearColumnTasks,
     clearAllTasks,
+    // Category methods
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    resetCategories,
+    // Template methods
     addTemplate,
     updateTemplate,
     togglePinTemplate,

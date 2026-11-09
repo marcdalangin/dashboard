@@ -87,8 +87,8 @@ export function SettingsModal({
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             {syncStatus === "synced"
-              ? "All your tasks, templates, and notes are synced to your Neon serverless database."
-              : "All tasks, templates, and notes are safely saved directly in your browser's persistent local storage. They will not be reset on refresh."}
+              ? "All your tasks, templates, custom categories, and notes are synced to your Neon serverless database."
+              : "All tasks, templates, custom categories, and notes are safely saved directly in your browser's persistent local storage. They will not be reset on refresh."}
           </p>
 
           <div className="flex items-center gap-2 pt-1">
@@ -116,7 +116,7 @@ export function SettingsModal({
         <div className="space-y-3">
           <span className="text-xs font-semibold text-foreground block">Data Backup & Restore</span>
           <p className="text-[11px] text-muted-foreground">
-            Export a complete JSON backup of all your local tasks, templates, and notes, or import a previously saved backup file.
+            Export a complete JSON backup of all your local tasks, templates, custom categories, and notes, or import a previously saved backup file.
           </p>
 
           <div className="flex flex-wrap items-center gap-2 pt-1">
