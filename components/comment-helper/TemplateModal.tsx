@@ -28,7 +28,7 @@ export function TemplateModal({ template, isOpen, onClose, onSave, onDelete }: T
       setTitle(template.title);
       setCategory(template.category);
       setBody(template.body);
-      setPinned(template.pinned);
+      setPinned(template.pinned || false);
     } else {
       setTitle("");
       setCategory("scout-direct");
@@ -74,6 +74,7 @@ export function TemplateModal({ template, isOpen, onClose, onSave, onDelete }: T
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g. Allocation Notification..."
               className="w-full text-xs px-2.5 py-2 rounded border border-line bg-transparent text-foreground focus:outline-none focus:border-neutral-500"
+              autoFocus
             />
           </div>
 
@@ -93,27 +94,30 @@ export function TemplateModal({ template, isOpen, onClose, onSave, onDelete }: T
             </div>
 
             <div className="flex items-center gap-2 pt-5">
-              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={pinned}
                   onChange={(e) => setPinned(e.target.checked)}
-                  className="rounded border-line"
+                  className="rounded border-line text-neutral-900 focus:ring-0"
                 />
-                <span>Pin to top</span>
+                <span className="flex items-center gap-1 font-medium">
+                  <span>📌</span>
+                  <span>Pin to top</span>
+                </span>
               </label>
             </div>
           </div>
 
           <div>
             <label className="text-[11px] font-mono text-muted-foreground block mb-1">
-              Message Body (use [Variable Name] for placeholders):
+              Message Body (use <code className="text-foreground">[Scout Name]</code> for variables):
             </label>
             <textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               rows={6}
-              placeholder="Hi [Scout Name], please verify [Match ID] scheduled at [Time]..."
+              placeholder="Hi [Scout Name], please review the upcoming shift schedule..."
               className="w-full text-xs p-3 rounded border border-line bg-transparent text-foreground focus:outline-none focus:border-neutral-500 font-mono"
             />
           </div>
@@ -124,12 +128,15 @@ export function TemplateModal({ template, isOpen, onClose, onSave, onDelete }: T
             <button
               type="button"
               onClick={() => {
-                onDelete(template.id);
-                onClose();
+                if (confirm(`Delete template "${template.title}"?`)) {
+                  onDelete(template.id);
+                  onClose();
+                }
               }}
-              className="text-xs text-rose-500 hover:underline"
+              className="text-xs text-rose-500 hover:underline flex items-center gap-1"
             >
-              Delete Template
+              <span>🗑️</span>
+              <span>Delete Template</span>
             </button>
           ) : (
             <div />

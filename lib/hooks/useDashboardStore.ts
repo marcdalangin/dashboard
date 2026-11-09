@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { DashboardState, Task, Template, ColumnId, Priority, DashboardSettings } from "../types";
 import { DEFAULT_TASKS, DEFAULT_TEMPLATES } from "../defaultData";
 
-const STORAGE_KEY = "notion_dashboard_state_v2";
+const STORAGE_KEY = "notion_dashboard_state_v3";
+const LEGACY_STORAGE_KEY = "notion_dashboard_state_v2";
 
 const INITIAL_SETTINGS: DashboardSettings = {
   theme: "light",
@@ -24,6 +25,16 @@ const INITIAL_STATE: DashboardState = {
   history: [],
 };
 
+// Helper to filter out legacy dummy templates (tpl-1 through tpl-5)
+function filterOutDummyTemplates(templates: Template[]): Template[] {
+  return templates.filter((tpl) => !/^tpl-[1-5]$/.test(tpl.id));
+}
+
+// Helper to filter out legacy dummy tasks (task-1 through task-8)
+function filterOutDummyTasks(tasks: Task[]): Task[] {
+  return tasks.filter((t) => !/^task-[1-8]$/.test(t.id));
+}
+
 export function useDashboardStore() {
   const [state, setState] = useState<DashboardState>(INITIAL_STATE);
   const [isInitialized, setIsInitialized] = useState(false);
@@ -31,19 +42,39 @@ export function useDashboardStore() {
   const [syncStatus, setSyncStatus] = useState<"synced" | "saving" | "offline" | "unconfigured">("offline");
   const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 1. Load initial state from localStorage
+  // 1. Load initial state from localStorage (v3 first, then migrate v2 without dummy items)
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
+      const savedV3 = localStorage.getItem(STORAGE_KEY);
+      if (savedV3) {
+        const parsed = JSON.parse(savedV3);
         setState({
-          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : DEFAULT_TASKS,
-          templates: Array.isArray(parsed.templates) ? parsed.templates : DEFAULT_TEMPLATES,
+          tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+          templates: Array.isArray(parsed.templates) ? parsed.templates : [],
           settings: { ...INITIAL_SETTINGS, ...(parsed.settings || {}) },
           scratchpad: typeof parsed.scratchpad === "string" ? parsed.scratchpad : INITIAL_STATE.scratchpad,
           history: Array.isArray(parsed.history) ? parsed.history : [],
         });
+      } else {
+        // Migration from v2: import only user-created tasks and templates, purge pre-made dummy items
+        const savedV2 = localStorage.getItem(LEGACY_STORAGE_KEY);
+        if (savedV2) {
+          const parsedV2 = JSON.parse(savedV2);
+          const migratedTasks = Array.isArray(parsedV2.tasks) ? filterOutDummyTasks(parsedV2.tasks) : [];
+          const migratedTemplates = Array.isArray(parsedV2.templates) ? filterOutDummyTemplates(parsedV2.templates) : [];
+          const migratedState: DashboardState = {
+            tasks: migratedTasks,
+            templates: migratedTemplates,
+            settings: { ...INITIAL_SETTINGS, ...(parsedV2.settings || {}) },
+            scratchpad: typeof parsedV2.scratchpad === "string" ? parsedV2.scratchpad : INITIAL_STATE.scratchpad,
+            history: Array.isArray(parsedV2.history) ? parsedV2.history : [],
+          };
+          setState(migratedState);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedState));
+        } else {
+          // Fresh install: save clean empty state
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_STATE));
+        }
       }
     } catch (e) {
       console.warn("Failed to read localStorage:", e);
@@ -51,17 +82,7 @@ export function useDashboardStore() {
     setIsInitialized(true);
   }, []);
 
-  // 2. Persist to localStorage whenever state updates
-  useEffect(() => {
-    if (!isInitialized) return;
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {
-      console.error("Failed to save to localStorage:", e);
-    }
-  }, [state, isInitialized]);
-
-  // 3. Debounced Cloud Sync to Neon via /api/sync
+  // 2. Debounced Cloud Sync to Neon via /api/sync
   const triggerRemoteSync = useCallback((newState: DashboardState) => {
     if (!newState.settings.userEmail) {
       setSyncStatus("offline");
@@ -109,7 +130,7 @@ export function useDashboardStore() {
     }, 1200);
   }, []);
 
-  // 4. Fetch delta from Neon Postgres on load or focus
+  // 3. Fetch data from Neon Postgres on email set or window focus
   const fetchRemoteData = useCallback(async (email: string) => {
     if (!email) return;
     try {
@@ -121,11 +142,16 @@ export function useDashboardStore() {
           setState((prev) => {
             const merged: DashboardState = {
               ...prev,
-              tasks: Array.isArray(data.state.tasks) && data.state.tasks.length > 0 ? data.state.tasks : prev.tasks,
-              templates: Array.isArray(data.state.templates) && data.state.templates.length > 0 ? data.state.templates : prev.templates,
+              tasks: Array.isArray(data.state.tasks) ? data.state.tasks : prev.tasks,
+              templates: Array.isArray(data.state.templates) ? data.state.templates : prev.templates,
               scratchpad: data.state.scratchpad !== undefined ? data.state.scratchpad : prev.scratchpad,
               settings: { ...prev.settings, ...(data.state.settings || {}) },
             };
+            try {
+              localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+            } catch (err) {
+              console.warn("Local storage write failed:", err);
+            }
             return merged;
           });
           setSyncStatus("synced");
@@ -156,11 +182,16 @@ export function useDashboardStore() {
     };
   }, [state.settings.userEmail, fetchRemoteData]);
 
-  // Sync state mutation helper
+  // Synchronous State Mutation & Local Persistence Helper
   const updateState = useCallback(
     (updater: (prev: DashboardState) => DashboardState) => {
       setState((prev) => {
         const next = updater(prev);
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        } catch (e) {
+          console.error("Failed to write to localStorage:", e);
+        }
         triggerRemoteSync(next);
         return next;
       });
@@ -260,7 +291,7 @@ export function useDashboardStore() {
   const addTemplate = useCallback(
     (templateData: { title: string; category?: Template["category"]; body: string; pinned?: boolean }) => {
       const newTemplate: Template = {
-        id: "tpl-" + Date.now(),
+        id: "tpl-" + Date.now() + "-" + Math.random().toString(36).substring(2, 6),
         title: templateData.title.trim(),
         category: templateData.category || "scout-direct",
         body: templateData.body.trim(),
@@ -285,6 +316,18 @@ export function useDashboardStore() {
     [updateState]
   );
 
+  const togglePinTemplate = useCallback(
+    (templateId: string) => {
+      updateState((prev) => ({
+        ...prev,
+        templates: prev.templates.map((tpl) =>
+          tpl.id === templateId ? { ...tpl, pinned: !tpl.pinned } : tpl
+        ),
+      }));
+    },
+    [updateState]
+  );
+
   const deleteTemplate = useCallback(
     (templateId: string) => {
       updateState((prev) => ({
@@ -298,7 +341,7 @@ export function useDashboardStore() {
   const resetTemplates = useCallback(() => {
     updateState((prev) => ({
       ...prev,
-      templates: DEFAULT_TEMPLATES,
+      templates: [],
     }));
   }, [updateState]);
 
@@ -401,7 +444,15 @@ export function useDashboardStore() {
 
   // --- Export & Import ---
   const exportJSON = useCallback(() => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+    const backup = {
+      version: "3.0.0",
+      exportedAt: new Date().toISOString(),
+      tasks: state.tasks,
+      templates: state.templates,
+      settings: state.settings,
+      scratchpad: state.scratchpad,
+    };
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup, null, 2));
     const downloadAnchor = document.createElement("a");
     downloadAnchor.setAttribute("href", dataStr);
     downloadAnchor.setAttribute("download", `dashboard_backup_${new Date().toISOString().slice(0, 10)}.json`);
@@ -443,6 +494,7 @@ export function useDashboardStore() {
     clearAllTasks,
     addTemplate,
     updateTemplate,
+    togglePinTemplate,
     deleteTemplate,
     resetTemplates,
     updateScratchpad,

@@ -7,9 +7,16 @@ interface HotkeyHandlers {
   onToggleTheme?: () => void;
   onEscape?: () => void;
   onSearchFocus?: () => void;
+  onCtrlSpace?: () => void;
 }
 
-export function useHotkeys({ onToggleSidebar, onToggleTheme, onEscape, onSearchFocus }: HotkeyHandlers) {
+export function useHotkeys({
+  onToggleSidebar,
+  onToggleTheme,
+  onEscape,
+  onSearchFocus,
+  onCtrlSpace,
+}: HotkeyHandlers) {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Toggle sidebar: Ctrl + \ or Cmd + \
@@ -32,6 +39,14 @@ export function useHotkeys({ onToggleSidebar, onToggleTheme, onEscape, onSearchF
         return;
       }
 
+      // Ctrl + Spacebar: Quick Copy Template
+      if ((e.ctrlKey || e.metaKey) && (e.code === "Space" || e.key === " ")) {
+        // Don't trigger if user is typing in a textarea where they might want a space, unless Ctrl is held (which is not standard typing)
+        e.preventDefault();
+        onCtrlSpace?.();
+        return;
+      }
+
       // Ctrl + K or '/' to focus search (when not currently in an input)
       if (
         ((e.ctrlKey || e.metaKey) && (e.key === "k" || e.key === "K")) ||
@@ -45,5 +60,5 @@ export function useHotkeys({ onToggleSidebar, onToggleTheme, onEscape, onSearchF
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onToggleSidebar, onToggleTheme, onEscape, onSearchFocus]);
+  }, [onToggleSidebar, onToggleTheme, onEscape, onSearchFocus, onCtrlSpace]);
 }

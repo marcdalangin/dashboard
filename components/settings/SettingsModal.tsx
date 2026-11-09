@@ -72,21 +72,23 @@ export function SettingsModal({
         {/* Remote Sync (SMP Email) */}
         <div className="space-y-2 p-3 rounded-lg border border-line bg-sidebar">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-foreground">Neon Remote Synchronization</span>
+            <span className="text-xs font-semibold text-foreground">Storage & Neon Sync</span>
             <span
               className={`text-[10px] font-mono px-2 py-0.5 rounded ${
                 syncStatus === "synced"
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-semibold"
                   : syncStatus === "saving"
                   ? "bg-amber-500/10 text-amber-600"
-                  : "bg-muted text-muted-foreground"
+                  : "bg-muted text-muted-foreground font-semibold"
               }`}
             >
-              {syncStatus.toUpperCase()}
+              {syncStatus === "synced" ? "CLOUD SYNCED" : syncStatus === "saving" ? "SAVING..." : "LOCAL WORKSTATION MODE"}
             </span>
           </div>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Enter your SMP work email to automatically synchronize tasks, templates, and handover notes between your home and office workstations.
+            {syncStatus === "synced"
+              ? "All your tasks, templates, and notes are synced to your Neon serverless database."
+              : "All tasks, templates, and notes are safely saved directly in your browser's persistent local storage. They will not be reset on refresh."}
           </p>
 
           <div className="flex items-center gap-2 pt-1">
@@ -105,6 +107,9 @@ export function SettingsModal({
             </button>
           </div>
           {statusMsg && <p className="text-[11px] text-emerald-600 font-mono">{statusMsg}</p>}
+          <p className="text-[10px] text-muted-foreground/80 font-mono pt-1">
+            * To activate Neon Cloud sync on your workstation, configure DATABASE_URL in .env.local (see .env.local.example).
+          </p>
         </div>
 
         {/* Backup & Portability */}
@@ -119,34 +124,35 @@ export function SettingsModal({
               onClick={onExportJSON}
               className="text-xs px-3 py-1.5 rounded border border-line bg-card text-foreground hover:bg-hover flex items-center gap-1.5 font-medium"
             >
-              <span>⬇️</span>
+              <span>📥</span>
               <span>Export JSON Backup</span>
             </button>
 
             <label className="text-xs px-3 py-1.5 rounded border border-line bg-card text-foreground hover:bg-hover flex items-center gap-1.5 font-medium cursor-pointer">
-              <span>⬆️</span>
+              <span>📤</span>
               <span>Import JSON Backup</span>
               <input type="file" accept=".json" onChange={handleFileImport} className="hidden" />
             </label>
           </div>
         </div>
 
-        {/* Reset Templates */}
+        {/* Clear Templates */}
         <div className="space-y-2 pt-2 border-t border-line">
-          <span className="text-xs font-semibold text-foreground block">Reset Templates</span>
+          <span className="text-xs font-semibold text-foreground block">Clear All Templates</span>
           <p className="text-[11px] text-muted-foreground">
-            Restore original default comment templates without affecting your tasks or scout directory.
+            Remove all templates to start fresh with a clean templates list.
           </p>
           <button
             onClick={() => {
-              if (confirm("Reset comment templates back to original defaults?")) {
+              if (confirm("Clear all comment templates?")) {
                 onResetDefaults();
-                alert("Templates restored to default.");
+                alert("All templates cleared.");
               }
             }}
-            className="text-xs px-3 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium"
+            className="text-xs px-3 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium flex items-center gap-1.5"
           >
-            ↺ Reset Default Templates
+            <span>🗑️</span>
+            <span>Clear All Templates</span>
           </button>
         </div>
 
@@ -154,7 +160,7 @@ export function SettingsModal({
         <div className="space-y-2 pt-2 border-t border-line">
           <span className="text-xs font-semibold text-foreground block">Kanban Tasks Management</span>
           <p className="text-[11px] text-muted-foreground">
-            Clear all tasks across all columns to start a fresh shift or reset the board.
+            Clear all tasks across all columns to reset the board.
           </p>
           <button
             onClick={() => {
@@ -163,9 +169,10 @@ export function SettingsModal({
                 alert("All Kanban tasks cleared.");
               }
             }}
-            className="text-xs px-3 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium"
+            className="text-xs px-3 py-1.5 rounded border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-medium flex items-center gap-1.5"
           >
-            🗑️ Clear All Kanban Tasks
+            <span>🗑️</span>
+            <span>Clear All Kanban Tasks</span>
           </button>
         </div>
       </div>

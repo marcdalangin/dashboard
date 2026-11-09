@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { useDashboardStore } from "@/lib/hooks/useDashboardStore";
 import { useHotkeys } from "@/lib/hooks/useHotkeys";
-import { initScoutService, getScoutCount } from "@/lib/scoutService";
+import { initScoutService } from "@/lib/scoutService";
+import { formatScoutName } from "@/lib/scoutService";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { TopNavigation } from "@/components/layout/TopNavigation";
 import { Toast } from "@/components/layout/Toast";
@@ -12,6 +13,7 @@ import { CommentHelper } from "@/components/comment-helper/CommentHelper";
 import { HandoverNotes } from "@/components/scratchpad/HandoverNotes";
 import { ScoutsDirectory } from "@/components/scouts/ScoutsDirectory";
 import { SettingsModal } from "@/components/settings/SettingsModal";
+import { Template } from "@/lib/types";
 
 export default function DashboardPage() {
   const {
@@ -45,6 +47,7 @@ export default function DashboardPage() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isTaskDrawerOpen, setIsTaskDrawerOpen] = useState(false);
   const [globalSearchQuery, setGlobalSearchQuery] = useState("");
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   // Toast state
   const [toastMessage, setToastMessage] = useState("");
@@ -103,6 +106,31 @@ export default function DashboardPage() {
     }
   };
 
+  // Quick Ctrl+Space handler
+  const handleCtrlSpace = () => {
+    // 1. If a template is selected, copy it
+    let targetTemplate = selectedTemplate;
+    // 2. If no template is explicitly selected, look for the first pinned template or first template
+    if (!targetTemplate && state.templates.length > 0) {
+      targetTemplate = state.templates.find((t) => t.pinned) || state.templates[0];
+    }
+
+    if (targetTemplate) {
+      const formattedScout = formatScoutName(state.settings.selectedScout, state.settings.useFirstNameOnly);
+      let text = targetTemplate.body;
+      const matches = text.match(/\[(.*?)\]/g) || [];
+      matches.forEach((raw) => {
+        const clean = raw.slice(1, -1).trim().toLowerCase();
+        if (clean.includes("scout")) {
+          text = text.split(raw).join(formattedScout);
+        }
+      });
+      handleCopyText(text, targetTemplate.title);
+    } else {
+      showToast("No template created yet. Click + Template to add one!");
+    }
+  };
+
   // Global hotkeys
   useHotkeys({
     onToggleSidebar: () => setSidebarCollapsed(!state.settings.sidebarCollapsed),
@@ -116,6 +144,7 @@ export default function DashboardPage() {
       const el = document.getElementById("global-search-input");
       if (el) el.focus();
     },
+    onCtrlSpace: handleCtrlSpace,
   });
 
   return (
@@ -181,9 +210,12 @@ export default function DashboardPage() {
               onUpdateTemplate={updateTemplate}
               onDeleteTemplate={(id) => {
                 deleteTemplate(id);
-                showToast("✓ Template deleted");
+                showToast("🗑️ Template deleted");
               }}
               onCopyText={handleCopyText}
+              selectedTemplateId={selectedTemplate?.id}
+              onSelectTemplate={setSelectedTemplate}
+              onExportJSON={exportJSON}
             />
           )}
 

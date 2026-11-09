@@ -16,6 +16,9 @@ interface CommentHelperProps {
   onUpdateTemplate: (id: string, updates: Partial<Template>) => void;
   onDeleteTemplate: (id: string) => void;
   onCopyText: (text: string, title?: string) => void;
+  selectedTemplateId?: string | null;
+  onSelectTemplate?: (tpl: Template | null) => void;
+  onExportJSON?: () => void;
 }
 
 export function CommentHelper({
@@ -28,17 +31,23 @@ export function CommentHelper({
   onUpdateTemplate,
   onDeleteTemplate,
   onCopyText,
+  selectedTemplateId,
+  onSelectTemplate,
+  onExportJSON,
 }: CommentHelperProps) {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [templateSearch, setTemplateSearch] = useState("");
   const [scoutQuery, setScoutQuery] = useState(selectedScout);
   const [scoutSuggestions, setScoutSuggestions] = useState<string[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [localSelectedId, setLocalSelectedId] = useState<string | null>(null);
 
   // Modals state
   const [activeVariableTemplate, setActiveVariableTemplate] = useState<Template | null>(null);
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
   const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
+
+  const activeSelectedId = selectedTemplateId !== undefined ? selectedTemplateId : localSelectedId;
 
   const formattedScoutName = formatScoutName(scoutQuery, useFirstNameOnly);
 
@@ -59,6 +68,7 @@ export function CommentHelper({
     setShowDropdown(false);
   };
 
+  // 1. Filter by category & search term
   const filteredTemplates = templates.filter((tpl) => {
     const matchesCategory = activeCategory === "all" || tpl.category === activeCategory;
     if (!matchesCategory) return false;
@@ -68,12 +78,36 @@ export function CommentHelper({
     return tpl.title.toLowerCase().includes(q) || tpl.body.toLowerCase().includes(q);
   });
 
+  // 2. Sort pinned templates to the very top
+  const sortedTemplates = [...filteredTemplates].sort((a, b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return 0;
+  });
+
   const handleTemplateClick = (tpl: Template) => {
-    const hasVariables = /\[(.*?)\]/.test(tpl.body);
-    if (hasVariables) {
+    setLocalSelectedId(tpl.id);
+    onSelectTemplate?.(tpl);
+
+    // Check for variables other than [Scout Name] and [Match ID]
+    const matches = tpl.body.match(/\[(.*?)\]/g) || [];
+    const nonScoutVariables = matches.filter((raw) => {
+      const clean = raw.slice(1, -1).trim().toLowerCase();
+      return !clean.includes("scout") && !clean.includes("match id") && !clean.includes("match_id");
+    });
+
+    if (nonScoutVariables.length > 0) {
       setActiveVariableTemplate(tpl);
     } else {
-      onCopyText(tpl.body, tpl.title);
+      // Auto-fill scout name directly
+      let text = tpl.body;
+      matches.forEach((raw) => {
+        const clean = raw.slice(1, -1).trim().toLowerCase();
+        if (clean.includes("scout")) {
+          text = text.split(raw).join(formattedScoutName);
+        }
+      });
+      onCopyText(text, tpl.title);
     }
   };
 
@@ -83,7 +117,7 @@ export function CommentHelper({
       <div className="hidden sm:flex items-center gap-3 p-3 rounded-lg border border-line bg-sidebar text-xs text-muted-foreground">
         <span className="text-base">💬</span>
         <div className="leading-relaxed">
-          <strong className="text-foreground">Comment Templating Engine:</strong> Assign a scout to auto-fill variables, toggle between full and first names, and copy formatted messages in one click.
+          <strong className="text-foreground">Comment Templating Engine:</strong> Create and pin templates to top for quick access. Click any template or press <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono border border-line">Ctrl + Space</kbd> to copy instantly with active scout auto-fill.
         </div>
       </div>
 
@@ -163,7 +197,7 @@ export function CommentHelper({
           ))}
         </div>
 
-        {/* Search & New Template */}
+        {/* Search & Actions */}
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -172,74 +206,149 @@ export function CommentHelper({
             placeholder="Search templates..."
             className="text-xs px-2.5 py-1.5 rounded border border-line bg-card text-foreground focus:outline-none w-36 sm:w-44"
           />
+          {onExportJSON && (
+            <button
+              onClick={onExportJSON}
+              title="Export all data to JSON"
+              className="text-xs px-2.5 py-1.5 rounded border border-line bg-card text-muted-foreground hover:text-foreground hover:bg-hover flex items-center gap-1"
+            >
+              <span>📥</span>
+              <span className="hidden md:inline">JSON</span>
+            </button>
+          )}
           <button
             onClick={() => {
               setEditingTemplate(null);
               setIsTemplateModalOpen(true);
             }}
-            className="text-xs px-3 py-1.5 rounded bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium hover:opacity-90 whitespace-nowrap"
+            className="text-xs px-3 py-1.5 rounded bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium hover:opacity-90 whitespace-nowrap flex items-center gap-1"
           >
-            + Template
+            <span>+</span>
+            <span>Template</span>
           </button>
         </div>
       </div>
 
       {/* Template Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filteredTemplates.map((tpl) => (
-          <div
-            key={tpl.id}
-            onClick={() => handleTemplateClick(tpl)}
-            className="group p-3.5 rounded-xl border border-line bg-card hover:border-neutral-400 dark:hover:border-neutral-600 transition-all cursor-pointer flex flex-col justify-between space-y-2.5 shadow-sm"
-          >
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-tag text-muted-foreground uppercase tracking-wider">
-                  {tpl.category}
-                </span>
-                <div className="flex items-center gap-1 opacity-80 sm:opacity-60 group-hover:opacity-100 transition-opacity">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingTemplate(tpl);
-                      setIsTemplateModalOpen(true);
-                    }}
-                    className="p-1 px-1.5 text-xs text-muted-foreground hover:text-foreground rounded hover:bg-hover transition-colors"
-                    title="Edit Template"
-                    aria-label="Edit Template"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (confirm(`Delete template "${tpl.title}"?`)) {
-                        onDeleteTemplate(tpl.id);
-                      }
-                    }}
-                    className="p-1 px-1.5 text-xs text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors"
-                    title="Delete Template"
-                    aria-label="Delete Template"
-                  >
-                    🗑️
-                  </button>
+        {sortedTemplates.map((tpl) => {
+          const isSelected = activeSelectedId === tpl.id;
+          return (
+            <div
+              key={tpl.id}
+              onClick={() => handleTemplateClick(tpl)}
+              className={`group p-3.5 rounded-xl border bg-card transition-all cursor-pointer flex flex-col justify-between space-y-2.5 shadow-sm relative ${
+                isSelected
+                  ? "border-neutral-900 dark:border-white ring-2 ring-neutral-900/10 dark:ring-white/10"
+                  : tpl.pinned
+                  ? "border-amber-500/40 dark:border-amber-400/40 bg-amber-500/[0.02]"
+                  : "border-line hover:border-neutral-400 dark:hover:border-neutral-600"
+              }`}
+            >
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-tag text-muted-foreground uppercase tracking-wider">
+                      {tpl.category}
+                    </span>
+                    {tpl.pinned && (
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center gap-0.5 font-semibold">
+                        <span>📌</span>
+                        <span>PINNED</span>
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1 opacity-80 sm:opacity-60 group-hover:opacity-100 transition-opacity">
+                    {/* 1-Click Pin/Unpin */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onUpdateTemplate(tpl.id, { pinned: !tpl.pinned });
+                      }}
+                      className={`p-1 px-1.5 text-xs rounded transition-colors ${
+                        tpl.pinned
+                          ? "text-amber-600 dark:text-amber-400 bg-amber-500/15"
+                          : "text-muted-foreground hover:text-foreground hover:bg-hover"
+                      }`}
+                      title={tpl.pinned ? "Unpin template" : "Pin to top"}
+                      aria-label={tpl.pinned ? "Unpin template" : "Pin to top"}
+                    >
+                      📌
+                    </button>
+                    {/* Edit */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingTemplate(tpl);
+                        setIsTemplateModalOpen(true);
+                      }}
+                      className="p-1 px-1.5 text-xs text-muted-foreground hover:text-foreground rounded hover:bg-hover transition-colors"
+                      title="Edit Template"
+                      aria-label="Edit Template"
+                    >
+                      ✏️
+                    </button>
+                    {/* Delete */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Delete template "${tpl.title}"?`)) {
+                          onDeleteTemplate(tpl.id);
+                        }
+                      }}
+                      className="p-1 px-1.5 text-xs text-muted-foreground hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-500/10 rounded transition-colors"
+                      title="Delete Template"
+                      aria-label="Delete Template"
+                    >
+                      🗑️
+                    </button>
+                  </div>
                 </div>
+
+                <h4 className="text-xs font-semibold text-foreground flex items-center justify-between">
+                  <span>{tpl.title}</span>
+                </h4>
+                <p className="text-[11px] text-muted-foreground line-clamp-3 font-mono leading-relaxed">
+                  {tpl.body}
+                </p>
               </div>
 
-              <h4 className="text-xs font-semibold text-foreground">{tpl.title}</h4>
-              <p className="text-[11px] text-muted-foreground line-clamp-3 font-mono leading-relaxed">
-                {tpl.body}
+              <div className="pt-2 border-t border-line flex items-center justify-between text-[11px]">
+                <span className="text-muted-foreground font-mono flex items-center gap-1 text-[10px]">
+                  <span>Click to copy</span>
+                  <span className="hidden sm:inline text-neutral-400 dark:text-neutral-500">· Ctrl+Space</span>
+                </span>
+                <span className="text-xs font-semibold text-foreground">📋</span>
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Empty State */}
+        {sortedTemplates.length === 0 && (
+          <div className="col-span-full py-12 px-4 rounded-xl border border-dashed border-line bg-card/40 text-center space-y-3">
+            <span className="text-3xl block">💬</span>
+            <div className="space-y-1">
+              <h3 className="text-sm font-semibold text-foreground">No Comment Templates Yet</h3>
+              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                Create custom templates with variables like <code className="text-foreground">[Scout Name]</code> and pin your most-used templates to the top.
               </p>
             </div>
-
-            <div className="pt-2 border-t border-line flex items-center justify-between text-[11px]">
-              <span className="text-muted-foreground font-mono">Click to preview & copy</span>
-              <span className="text-xs font-semibold text-foreground">📋</span>
-            </div>
+            <button
+              onClick={() => {
+                setEditingTemplate(null);
+                setIsTemplateModalOpen(true);
+              }}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              <span>+</span>
+              <span>Create First Template</span>
+            </button>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Variable Fill Modal */}
